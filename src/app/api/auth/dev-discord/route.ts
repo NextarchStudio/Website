@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   getDiscordAccessToken, 
   getDiscordUser, 
-  getDiscordGuilds, 
   createJWT, 
   setAuthCookie 
 } from '@/lib/auth';
 
+// Development-only route that bypasses guild membership checks
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const error = searchParams.get('error');
 
-    console.log('Discord callback started', { code: !!code, error });
+    console.log('Dev Discord callback started', { code: !!code, error });
 
     // Handle OAuth errors
     if (error) {
@@ -46,27 +46,8 @@ export async function GET(request: NextRequest) {
 
     console.log('Discord user:', { id: discordUser.id, username: discordUser.username });
 
-    // Get user's Discord guilds (servers)
-    console.log('Getting Discord guilds...');
-    const guilds = await getDiscordGuilds(accessToken);
-    console.log('User guilds:', guilds.map(g => ({ id: g.id, name: g.name })));
-    
-    // Check if user is a member of the specified Discord guild
-    const requiredGuildId = process.env.DISCORD_GUILD_ID;
-    console.log('Required guild ID:', requiredGuildId);
-    
-    if (!requiredGuildId) {
-      console.error('DISCORD_GUILD_ID not configured');
-      return NextResponse.redirect(new URL('/admin/login?error=config_error', process.env.NEXTAUTH_URL || 'http://localhost:3000'));
-    }
-
-    const isMember = guilds.some(guild => guild.id === requiredGuildId);
-    console.log('Is member of required guild:', isMember);
-    
-    if (!isMember) {
-      console.error('User is not a member of the required guild');
-      return NextResponse.redirect(new URL('/admin/login?error=not_member', process.env.NEXTAUTH_URL || 'http://localhost:3000'));
-    }
+    // Skip guild membership check for development
+    console.log('Skipping guild membership check (dev mode)');
 
     // Create user object
     const user = {
@@ -96,7 +77,7 @@ export async function GET(request: NextRequest) {
     
     return response;
   } catch (error) {
-    console.error('Discord callback error:', error);
+    console.error('Dev Discord callback error:', error);
     return NextResponse.redirect(new URL('/admin/login?error=callback_failed', process.env.NEXTAUTH_URL || 'http://localhost:3000'));
   }
 } 

@@ -35,6 +35,13 @@ export default function AdminLoginPage() {
     window.location.href = '/api/auth/discord';
   };
 
+  const handleDevDiscordLogin = () => {
+    // Clear any existing errors
+    setError(null);
+    // Redirect to development Discord OAuth (bypasses guild check)
+    window.location.href = '/api/auth/dev-discord';
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
@@ -102,14 +109,24 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Development Mode Button */}
-            <Link
-              href="/api/auth/dev-login"
-              className="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm"
-            >
-              <Lock className="h-4 w-4" />
-              <span>Dev Mode Login (Testing Only)</span>
-            </Link>
+            {/* Development Mode Buttons */}
+            <div className="space-y-2">
+              <button
+                onClick={handleDevDiscordLogin}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm"
+              >
+                <Users className="h-4 w-4" />
+                <span>Dev Discord Login (No Guild Check)</span>
+              </button>
+
+              <Link
+                href="/api/auth/dev-login"
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm"
+              >
+                <Lock className="h-4 w-4" />
+                <span>Dev Mode Login (Testing Only)</span>
+              </Link>
+            </div>
           </div>
 
           {/* Info */}

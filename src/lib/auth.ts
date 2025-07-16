@@ -6,7 +6,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // Discord OAuth URLs and configuration
 export const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 export const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-export const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'http://localhost:3000/admin/auth/callback';
+
+// Use external domain for production, localhost for development
+const getRedirectUri = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.DISCORD_REDIRECT_URI || 'http://85.165.117.85/api/auth/callback';
+  }
+  return process.env.DISCORD_REDIRECT_URI || 'http://localhost:3000/api/auth/callback';
+};
+
+export const DISCORD_REDIRECT_URI = getRedirectUri();
 
 export function getDiscordAuthUrl(): string {
   const params = new URLSearchParams({
@@ -135,11 +144,15 @@ export const AUTH_COOKIE_NAME = 'nextarch-admin-token';
 
 export function setAuthCookie(token: string): string {
   const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
-  return `${AUTH_COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`;
+  const isLocalhost = process.env.NODE_ENV === 'development';
+  const secureFlag = isLocalhost ? '' : '; Secure';
+  return `${AUTH_COOKIE_NAME}=${token}; HttpOnly; SameSite=Strict; Max-Age=${maxAge}; Path=/${secureFlag}`;
 }
 
 export function clearAuthCookie(): string {
-  return `${AUTH_COOKIE_NAME}=; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Path=/`;
+  const isLocalhost = process.env.NODE_ENV === 'development';
+  const secureFlag = isLocalhost ? '' : '; Secure';
+  return `${AUTH_COOKIE_NAME}=; HttpOnly; SameSite=Strict; Max-Age=0; Path=/${secureFlag}`;
 }
 
 // Mock user data for development (remove in production)

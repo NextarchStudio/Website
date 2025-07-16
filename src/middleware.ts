@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWT, AUTH_COOKIE_NAME } from '@/lib/auth';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,23 +14,26 @@ export function middleware(request: NextRequest) {
   }
 
   // Check for authentication cookie
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = request.cookies.get('nextarch-admin-token')?.value;
+  
+  console.log('Middleware check:', {
+    pathname,
+    hasToken: !!token,
+    tokenLength: token?.length || 0
+  });
   
   if (!token) {
+    console.log('No token found, redirecting to login');
     // Redirect to login if no token
     return NextResponse.redirect(new URL('/admin/login', request.url));
   }
 
-  // Verify JWT token
-  const user = verifyJWT(token);
-  if (!user || !user.isAdmin) {
-    // Clear invalid token and redirect to login
-    const response = NextResponse.redirect(new URL('/admin/login', request.url));
-    response.cookies.delete(AUTH_COOKIE_NAME);
-    return response;
-  }
-
-  // User is authenticated, allow access
+  // For now, just check if token exists (we'll verify it properly in the API routes)
+  // The Edge runtime doesn't support the crypto module needed for JWT verification
+  // We'll handle proper verification in the API routes instead
+  
+  console.log('Token found, allowing access');
+  // User has token, allow access
   return NextResponse.next();
 }
 

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { verifyJWT, AUTH_COOKIE_NAME } from "@/lib/auth";
+import type { User } from "@/types";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -191,22 +192,32 @@ export default async function AdminDashboard() {
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   
-  if (!token) {
-    throw new Error('No authentication token found');
+  let user = null;
+  if (token) {
+    try {
+      user = verifyJWT(token);
+    } catch (error) {
+      console.error('Error verifying JWT:', error);
+    }
   }
 
-  const user = verifyJWT(token);
+  // If no valid user, redirect to login
   if (!user || !user.isAdmin) {
-    throw new Error('Invalid or insufficient permissions');
+    // Instead of throwing an error, redirect to login
+    const { redirect } = await import('next/navigation');
+    redirect('/admin/login');
   }
+
+  // At this point, user is guaranteed to be non-null and isAdmin is true
+  const authenticatedUser = user as User;
 
   return (
-    <AdminLayout user={user}>
+    <AdminLayout user={authenticatedUser}>
       <div className="space-y-8">
         {/* Welcome Section */}
         <div>
           <h1 className="text-2xl font-bold mb-2">
-            Welcome back, {user.username}!
+            Welcome back, {authenticatedUser.username}!
           </h1>
           <p className="text-gray-400">
             Here&apos;s what&apos;s happening with your studio today.
